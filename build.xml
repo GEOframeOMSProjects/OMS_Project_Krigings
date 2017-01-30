@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="OMS_Projects_Krigings" default="all" basedir=".">
+    <description>
+       Manages the project 'OMS_Projects_Krigings'.
+       Created at Tue Sep 27 09:15:34 CEST 2016.
+    </description>
+    <import file=".oms/project.xml"/>
+</project>

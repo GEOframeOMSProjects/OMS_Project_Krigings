@@ -1,0 +1,143 @@
+import static oms3.SimBuilder.instance as OMS3
+import static oms3.SimBuilder.*
+def home=oms_prj
+def startDate= "2000-01-01 00:00"
+def endDate="2000-01-01 00:00"
+
+ps = OMS3.ps_run(name:"KRIGING_PS",
+    {
+    
+   
+    outputstrategy(dir: "$oms_prj/output/TV", scheme:SIMPLE)
+
+model(while: "reader_distances.doProcess" ) {
+   components {
+    
+        // components to be called: reader input data, lwrb and writer output data
+        "reader_distances"            "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader" 
+          
+        "reader_semivariance"            "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader" 
+             
+        "TV"                          "theoreticalVariogram.TheoreticalVariogram"
+        
+        "reader_data"            	       "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"
+        
+        "vreader_station"                   "org.jgrasstools.gears.io.shapefile.OmsShapefileFeatureReader" 
+            
+        "vreader_interpolation"             "org.jgrasstools.gears.io.shapefile.OmsShapefileFeatureReader"
+        
+        "kriging"                           "krigings.Krigings"
+        
+        "writer_interpolated"               "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter" 
+                     
+   }
+
+  
+   parameter{
+   
+        // parameter of the reader components 
+        "reader_distances.file"             "${home}/output/distances.csv" 
+        "reader_distances.idfield"          "ID"  
+        "reader_distances.tStart"           "${startDate}"
+        "reader_distances.tEnd"             "${endDate}"
+        "reader_distances.tTimestep"          60
+        "reader_distances.fileNovalue"      "-9999"
+        
+        "reader_semivariance.file"             "${home}/output/EV.csv" 
+        "reader_semivariance.idfield"          "ID"  
+        "reader_semivariance.tStart"           "${startDate}"
+        "reader_semivariance.tEnd"             "${endDate}"
+        "reader_semivariance.tTimestep"          60
+        "reader_semivariance.fileNovalue"      "-9999"
+            
+        "TV.modelName"   "linear"
+        "TV.range"       123537.0
+        "TV.nugget"      0.0
+        "TV.sill"        1.678383 
+
+            
+        // parameter of the reader components 
+        "reader_data.file"             "${home}/data/rain_test2A.csv"
+        "reader_data.idfield"          "ID"  
+        "reader_data.tStart"           "${startDate}"
+        "reader_data.tEnd"             "${endDate}"
+        "reader_data.tTimestep"          60
+        "reader_data.fileNovalue"      "-9999"
+        
+
+        
+        "vreader_station.file"                       "${home}/data/rainstations.shp"      
+        "vreader_interpolation.file"				 "${home}/data/basins_passirio_width0.shp"
+        
+        
+        
+		"kriging.fStationsid"            "ID_PUNTI_M"
+		"kriging.fInterpolateid"         "netnum"
+		"kriging.inNumCloserStations"     5
+		
+	   "kriging.range"           "ps.model.TV.range"
+       "kriging.nugget"          "ps.model.TV.nugget"
+       "kriging.sill"            "ps.model.TV.sill"
+
+
+            
+        // parameter of the writing component    
+        "writer_interpolated.file"                   "${home}/output/kriging_interpolated.csv" 
+        "writer_interpolated.tStart"                 "${startDate}"
+        "writer_interpolated.tTimestep"              60
+        
+   }
+    connect {
+    	
+    	        
+        "reader_data.outData"                    "kriging.inData"
+        "vreader_station.geodata"                "kriging.inStations"      
+        "vreader_interpolation.geodata"          "kriging.inInterpolate"  
+         
+        "reader_distances.outData"             	"TV.inDistanceValues"  
+        "reader_semivariance.outData"           "TV.inExperimentalVariogramValues" 
+        
+				
+        
+           
+        "kriging.outData"            		    "writer_interpolated.inData"
+        
+
+   }
+
+}
+
+       // PSO parameters setting
+        kmax    1000
+        numPart 10
+        check_after 75
+        check_last  50
+        check_min   30
+        check_delta 0.0001
+        verbose 2
+        
+        // parameter to optimize
+        parameter {
+        
+                "TV_range"       (lower:0.0, upper:20.0,calib_strategy:MEAN)
+                "TV_nugget"      (lower:200, upper:700,calib_strategy:MEAN)
+                "TV_sill"        (lower:400, upper:800,calib_strategy:MEAN)
+
+        
+        }
+        // objective function
+        objfunc(method:KGE,invalidDataValue:-999.0) {
+            sim(data:"TV.result")
+            obs(data:"TV.observation")
+        }
+        
+        
+    }
+    
+    )
+    
+
+    
+
+
+

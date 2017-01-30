@@ -1,0 +1,76 @@
+import static oms3.SimBuilder.instance as OMS3
+def home = oms_prj
+
+// start and end date of the simulation
+def startDate= "2000-01-01 00:00"
+def endDate="2000-01-01 00:00"
+
+OMS3.sim {
+
+resource "$oms_prj/lib"
+
+ model(while: "reader_data.doProcess" ) {
+   components {
+    
+        "reader_data"            	       "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"
+        
+        "vreader_station"                   "org.jgrasstools.gears.io.shapefile.OmsShapefileFeatureReader" 
+            
+        "vreader_interpolation"             "org.jgrasstools.gears.io.shapefile.OmsShapefileFeatureReader"
+        
+        "kriging"                           "krigings.Krigings"
+        
+        "writer_interpolated"               "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter" 
+        
+            
+         
+   }
+
+  
+   parameter{
+   
+        // parameter of the reader components 
+        "reader_data.file"             "${home}/data/rain_test2A.csv"
+        "reader_data.idfield"          "ID"  
+        "reader_data.tStart"           "${startDate}"
+        "reader_data.tEnd"             "${endDate}"
+        "reader_data.tTimestep"          60
+        "reader_data.fileNovalue"      "-9999"
+        
+
+        
+        "vreader_station.file"                       "${home}/data/rainstations.shp"      
+        "vreader_interpolation.file"				 "${home}/data/basins_passirio_width0.shp"
+        
+        
+        
+		"kriging.fStationsid"            "ID_PUNTI_M"
+		"kriging.fInterpolateid"         "netnum"
+		"kriging.inNumCloserStations"     5
+
+        "kriging.range" 				123537.0
+        "kriging.nugget" 			    0.0
+        "kriging.sill" 					1.678383
+            
+        // parameter of the writing component    
+        "writer_interpolated.file"                   "${home}/output/kriging_interpolated.csv" 
+        "writer_interpolated.tStart"                 "${startDate}"
+        "writer_interpolated.tTimestep"              60
+
+        
+   }
+    connect {
+        
+       "reader_data.outData"                         "kriging.inData"
+       
+        "vreader_station.geodata"                "kriging.inStations"      
+        "vreader_interpolation.geodata"          "kriging.inInterpolate"  
+         
+        "kriging.outData"            		    "writer_interpolated.inData"
+
+   }
+
+ }
+}
+
+
