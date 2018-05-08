@@ -11,10 +11,15 @@ OMS3.sim {
     model() {
         components {
            "c" "ex0.Component"
+           "d" "ex1.Component"
         }
         
         parameter {
           "c.message" "Hello World  ..."
+        }
+        
+         connect {
+          "c.out"		"d.in"
         }
     }
 }

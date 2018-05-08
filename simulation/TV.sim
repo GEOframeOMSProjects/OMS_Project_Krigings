@@ -1,9 +1,10 @@
 import static oms3.SimBuilder.instance as OMS3
 def home = oms_prj
-
+def month=6
 // start and end date of the simulation
-def startDate= "2000-01-01 00:00"
-def endDate="2000-01-01 00:00"
+def startDate= "2008-${month}-01 00:00"
+def endDate="2008-${month}-01 00:00"
+
 OMS3.sim {
 
 resource "$oms_prj/lib"
@@ -12,7 +13,8 @@ resource "$oms_prj/lib"
    components {
     
         // components to be called: reader input data, lwrb and writer output data
-        "reader_distances"            "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"       
+        "reader_distances"            "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"  
+         "reader_variogram"            "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"      
         "TV"                          "theoreticalVariogram.TheoreticalVariogram"
         "writer_semivariance"         "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter" 
             
@@ -22,30 +24,39 @@ resource "$oms_prj/lib"
   
    parameter{
    
-        // parameter of the reader components 
-        "reader_distances.file"             "${home}/output/distances.csv" 
+        "reader_distances.file"             "${home}/output/EV/distanze/distances_${month}_8.csv" 
         "reader_distances.idfield"          "ID"  
         "reader_distances.tStart"           "${startDate}"
         "reader_distances.tEnd"             "${endDate}"
         "reader_distances.tTimestep"          60
         "reader_distances.fileNovalue"      "-9999"
         
-            
-        "TV.modelName"   "linear"
-        "TV.range"       123537.0
-        "TV.nugget"      0.0
-        "TV.sill"        1.678383 
-
-            
+        "reader_variogram.file"             "${home}/output/EV/medie/EV_${month}_8.csv" 
+        "reader_variogram.idfield"          "ID"  
+        "reader_variogram.tStart"           "${startDate}"
+        "reader_variogram.tEnd"             "${endDate}"
+        "reader_variogram.tTimestep"          60
+        "reader_variogram.fileNovalue"      "-9999"
         
-        "writer_semivariance.file"                 "${home}/output/TV.csv" 
+            
+        "TV.modelName"   "power" 
+
+
+        "TV.range"      0.0075397
+        "TV.nugget"     7.376561715
+        "TV.sill"      14.68983663
+    
+   
+  
+        "writer_semivariance.file"                 "${home}/output/June/TV_${month}_8_power.csv" 
         "writer_semivariance.tStart"               "${startDate}"
         "writer_semivariance.tTimestep"            60
         
    }
     connect {
         
-        "reader_distances.outData"             	"TV.inDistanceValues"          
+        "reader_distances.outData"             	"TV.inDistanceValues"  
+        "reader_variogram.outData"             	"TV.inExperimentalVariogramValues"         
         "TV.outHMtheoreticalVariogram"           "writer_semivariance.inData"
 
    }

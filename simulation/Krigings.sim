@@ -1,9 +1,9 @@
 import static oms3.SimBuilder.instance as OMS3
 def home = oms_prj
-
+def month=12
 // start and end date of the simulation
-def startDate= "2000-01-01 00:00"
-def endDate="2000-01-01 00:00"
+def startDate= "2008-06-29 18:00"
+def endDate="2008-06-30 04:00"
 
 OMS3.sim {
 
@@ -18,7 +18,7 @@ resource "$oms_prj/lib"
             
         "vreader_interpolation"             "org.jgrasstools.gears.io.shapefile.OmsShapefileFeatureReader"
         
-        "kriging"                           "krigings.Krigings"
+        "kriging"                           "leaveOneOut.Krigings"  
         
         "writer_interpolated"               "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter" 
         
@@ -30,7 +30,7 @@ resource "$oms_prj/lib"
    parameter{
    
         // parameter of the reader components 
-        "reader_data.file"             "${home}/data/rain_test2A.csv"
+        "reader_data.file"               "${home}/data/IS_Temperatura_2008.csv"
         "reader_data.idfield"          "ID"  
         "reader_data.tStart"           "${startDate}"
         "reader_data.tEnd"             "${endDate}"
@@ -39,22 +39,32 @@ resource "$oms_prj/lib"
         
 
         
-        "vreader_station.file"                       "${home}/data/rainstations.shp"      
-        "vreader_interpolation.file"				 "${home}/data/basins_passirio_width0.shp"
+        "vreader_station.file"                       "${home}/data/All_Stazioni_meteo.shp"      
+        //"vreader_interpolation.file"				 "${home}/data/All_Stazioni_meteo.shp"
         
         
         
-		"kriging.fStationsid"            "ID_PUNTI_M"
-		"kriging.fInterpolateid"         "netnum"
-		"kriging.inNumCloserStations"     5
+		"kriging.fStationsid"            "id"
+		"kriging.fStationsZ"			 "quota"
+		//"kriging.fInterpolateid"         "id"
+		"kriging.inNumCloserStations"     10
 
-        "kriging.range" 				123537.0
-        "kriging.nugget" 			    0.0
-        "kriging.sill" 					1.678383
-            
-        // parameter of the writing component    
-        "writer_interpolated.file"                   "${home}/output/kriging_interpolated.csv" 
+		"kriging.pSemivariogramType"   "linear"
+		
+		//"kriging.doDetrended"     true
+
+        "kriging.range" 							41315.76341306812
+        "kriging.nugget" 			  				5.982206872
+        "kriging.sill" 								3.33
+        
+
+        
+
+        
+        // parameter of the writing component   
+        "writer_interpolated.file"                   "${home}/output/LOK_rain_giugno_10.csv" 
         "writer_interpolated.tStart"                 "${startDate}"
+        //"writer_interpolated.tEnd"					 "${endDate}"
         "writer_interpolated.tTimestep"              60
 
         
@@ -64,7 +74,7 @@ resource "$oms_prj/lib"
        "reader_data.outData"                         "kriging.inData"
        
         "vreader_station.geodata"                "kriging.inStations"      
-        "vreader_interpolation.geodata"          "kriging.inInterpolate"  
+       // "vreader_interpolation.geodata"          "kriging.inInterpolate"  
          
         "kriging.outData"            		    "writer_interpolated.inData"
 

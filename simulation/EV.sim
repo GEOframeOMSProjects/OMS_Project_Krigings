@@ -2,8 +2,8 @@ import static oms3.SimBuilder.instance as OMS3
 def home = oms_prj
 
 // start and end date of the simulation
-def startDate= "2000-01-01 00:00"
-def endDate="2000-01-01 00:00"
+def startDate= "2008-06-29 18:00"
+def endDate="2008-06-30 04:00"
 OMS3.sim {
 
 resource "$oms_prj/lib"
@@ -26,7 +26,7 @@ resource "$oms_prj/lib"
    parameter{
    
         // parameter of the reader components 
-        "reader_data.file"             "${home}/data/variogram_test.csv"
+        "reader_data.file"             "${home}/data/IS_Temperatura_2008.csv"
         "reader_data.idfield"          "ID"  
         "reader_data.tStart"           "${startDate}"
         "reader_data.tEnd"             "${endDate}"
@@ -34,19 +34,20 @@ resource "$oms_prj/lib"
         "reader_data.fileNovalue"      "-9999"
         
         
-        "vreader_station.file"                  "${home}/data/jura.shp"
+        "vreader_station.file"                  "${home}/data/All_Stazioni_meteo.shp"
             
-        "EV.fStationsid"                      "Id" 
+        "EV.fStationsid"                      "id" 
+        "EV.Cutoff_divide"					   6
 
             
         // parameter of the writing component    
         "writer_distances.file"                   "${home}/output/distances.csv" 
         "writer_distances.tStart"                 "${startDate}"
-        "writer_distances.tTimestep"              60
+        "writer_distances.tTimestep"               60
         
         "writer_semivariance.file"                 "${home}/output/EV.csv" 
         "writer_semivariance.tStart"               "${startDate}"
-        "writer_semivariance.tTimestep"            60
+        "writer_semivariance.tTimestep"             60
         
    }
     connect {
