@@ -1,0 +1,83 @@
+import static oms3.SimBuilder.instance as OMS3
+def home = oms_prj
+// start and end date of the simulation
+def startDate= "2008-06-30 00:00"
+def endDate="2008-06-30 00:00"
+
+OMS3.sim {
+
+resource "$oms_prj/lib"
+
+ model(while: "reader_data.doProcess" ) {
+   components {
+        // components to be called: reader of the time series of measured values, 
+        // reader of the shape file with the coordinates of the measuring stations 
+        // reader of dem 
+        // kriging raster case and writer of the results
+        "reader_data"            	       "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"
+        
+        "vreader_station"                   "org.jgrasstools.gears.io.shapefile.OmsShapefileFeatureReader" 
+           
+        "reader_dem"                        "org.jgrasstools.gears.io.rasterreader.OmsRasterReader" 
+      
+        "kriging"                           "krigingsRasterCase.Krigings"  
+        
+        "pathGenerator"						"pathGenerator.PathGenerator"
+        
+        "writer_interpolated"               "org.jgrasstools.gears.io.rasterwriter.OmsRasterWriter" 
+      
+   }
+
+  
+   parameter{
+   
+		"reader_data.file"             "${home}/data/precipitazione.csv"
+        "reader_data.idfield"          "ID"  
+        "reader_data.tStart"           "${startDate}"
+        "reader_data.tEnd"             "${endDate}"
+        "reader_data.tTimestep"          60
+        "reader_data.fileNovalue"      "-9999"
+        
+        
+
+        
+        "vreader_station.file"                 "${home}/data/All_Stazioni_meteo_rain.shp"              
+        "reader_dem.file"                      "${home}/data/DEM.asc"
+
+     
+		"kriging.fStationsid"            "id"
+		"kriging.fStationsZ"			 "quota"
+		//"kriging.inNumCloserStations"     10
+
+		"kriging.pSemivariogramType"   "linear"
+		
+		//"kriging.doDetrended"     true
+
+        "kriging.range" 							41315.76341306812
+        "kriging.nugget" 			  				5.982206872
+        "kriging.sill" 								3.33
+        
+	
+        
+        
+        "pathGenerator.pathToOutData"			"${home}/output/LDK_precipitazioni.asc"
+        
+        
+   }
+    connect {
+        
+       "reader_data.outData"                         "kriging.inData"
+       
+        "vreader_station.geodata"                "kriging.inStations"      
+        "reader_dem.outRaster"					"kriging.inGridCoverage2D"  
+         
+        "reader_data.tCurrent" 					"pathGenerator.tCurrent"	
+        "pathGenerator.pathOutDataComplete"				"writer_interpolated.file"
+        "kriging.outGrid"            		     "writer_interpolated.inRaster"
+
+   }
+
+ }
+}
+
+

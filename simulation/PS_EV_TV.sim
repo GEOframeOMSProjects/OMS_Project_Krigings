@@ -1,10 +1,10 @@
 import static oms3.SimBuilder.instance as OMS3
 import static oms3.SimBuilder.*
 def home=oms_prj
-def startDate= "2000-01-01 00:00"
-def endDate="2000-01-01 00:00"
+def startDate= "2008-06-29 18:00"
+def endDate="2008-06-29 18:00"
 
-ps = OMS3.ps_run(name:"KRIGING_PS",
+ps = OMS3.ps_run(name:"PS_EV_TV",
     {
     
    
@@ -13,22 +13,13 @@ ps = OMS3.ps_run(name:"KRIGING_PS",
 model(while: "reader_distances.doProcess" ) {
    components {
     
-        // components to be called: reader input data, lwrb and writer output data
+        
         "reader_distances"            "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader" 
           
-        "reader_semivariance"            "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader" 
+        "reader_variogram"            "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader" 
              
         "TV"                          "theoreticalVariogram.TheoreticalVariogram"
         
-        "reader_data"            	       "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"
-        
-        "vreader_station"                   "org.jgrasstools.gears.io.shapefile.OmsShapefileFeatureReader" 
-            
-        "vreader_interpolation"             "org.jgrasstools.gears.io.shapefile.OmsShapefileFeatureReader"
-        
-        "kriging"                           "krigings.Krigings"
-        
-        "writer_interpolated"               "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter" 
                      
    }
 
@@ -36,108 +27,135 @@ model(while: "reader_distances.doProcess" ) {
    parameter{
    
         // parameter of the reader components 
-        "reader_distances.file"             "${home}/output/distances.csv" 
+        "reader_distances.file"             "${home}/output/distances_precipitazioni.csv" 
         "reader_distances.idfield"          "ID"  
         "reader_distances.tStart"           "${startDate}"
         "reader_distances.tEnd"             "${endDate}"
         "reader_distances.tTimestep"          60
         "reader_distances.fileNovalue"      "-9999"
         
-        "reader_semivariance.file"             "${home}/output/EV.csv" 
-        "reader_semivariance.idfield"          "ID"  
-        "reader_semivariance.tStart"           "${startDate}"
-        "reader_semivariance.tEnd"             "${endDate}"
-        "reader_semivariance.tTimestep"          60
-        "reader_semivariance.fileNovalue"      "-9999"
+        "reader_variogram.file"             "${home}/output/EV_precipitazioni.csv" 
+        "reader_variogram.idfield"          "ID"  
+        "reader_variogram.tStart"           "${startDate}"
+        "reader_variogram.tEnd"             "${endDate}"
+        "reader_variogram.tTimestep"          60
+        "reader_variogram.fileNovalue"      "-9999"
             
-        "TV.modelName"   "linear"
-        "TV.range"       123537.0
-        "TV.nugget"      0.0
-        "TV.sill"        1.678383 
-
             
-        // parameter of the reader components 
-        "reader_data.file"             "${home}/data/rain_test2A.csv"
-        "reader_data.idfield"          "ID"  
-        "reader_data.tStart"           "${startDate}"
-        "reader_data.tEnd"             "${endDate}"
-        "reader_data.tTimestep"          60
-        "reader_data.fileNovalue"      "-9999"
-        
-
-        
-        "vreader_station.file"                       "${home}/data/rainstations.shp"      
-        "vreader_interpolation.file"				 "${home}/data/basins_passirio_width0.shp"
-        
-        
-        
-		"kriging.fStationsid"            "ID_PUNTI_M"
-		"kriging.fInterpolateid"         "netnum"
-		"kriging.inNumCloserStations"     5
-		
-	   "kriging.range"           "ps.model.TV.range"
-       "kriging.nugget"          "ps.model.TV.nugget"
-       "kriging.sill"            "ps.model.TV.sill"
+        // "bessel"    "pentaspherical" "circular"  "gaussian"       
+        "TV.modelName"   "linear" 
 
 
+        "TV.range"      0.0075397
+        "TV.nugget"     7.376561715
+        "TV.sill"      14.68983663
             
-        // parameter of the writing component    
-        "writer_interpolated.file"                   "${home}/output/kriging_interpolated.csv" 
-        "writer_interpolated.tStart"                 "${startDate}"
-        "writer_interpolated.tTimestep"              60
         
    }
     connect {
-    	
-    	        
-        "reader_data.outData"                    "kriging.inData"
-        "vreader_station.geodata"                "kriging.inStations"      
-        "vreader_interpolation.geodata"          "kriging.inInterpolate"  
-         
+   	      
         "reader_distances.outData"             	"TV.inDistanceValues"  
-        "reader_semivariance.outData"           "TV.inExperimentalVariogramValues" 
-        
-				
-        
-           
-        "kriging.outData"            		    "writer_interpolated.inData"
-        
+        "reader_variogram.outData"           	"TV.inExperimentalVariogramValues"       
 
    }
 
 }
 
-       // PSO parameters setting
-        kmax    1000
+       // kmax : optional, default 1000
+        kmax    5000
+        // numPart optional default 10
         numPart 10
-        check_after 75
+        // all check variables optional, values
+        // below show the defaults.
+        check_after 175
         check_last  50
         check_min   30
-        check_delta 0.0001
-        verbose 2
+        check_delta 1e-8 
+        verbose 1
         
         // parameter to optimize
         parameter {
         
-                "TV_range"       (lower:0.0, upper:20.0,calib_strategy:MEAN)
-                "TV_nugget"      (lower:200, upper:700,calib_strategy:MEAN)
-                "TV_sill"        (lower:400, upper:800,calib_strategy:MEAN)
+                "TV_range"       (lower:0.0, upper:50000,calib_strategy:MEAN)
+                "TV_nugget"      (lower:0.0, upper:1,calib_strategy:MEAN)
+                "TV_sill"        (lower:0.0, upper:30,calib_strategy:MEAN)
 
         
         }
         // objective function
-        objfunc(method:KGE,invalidDataValue:-999.0) {
+        objfunc(method:RMSE,invalidDataValue:-9999) {
             sim(data:"TV.result")
             obs(data:"TV.observation")
         }
         
         
     }
+   ) 
     
-    )
     
+    
+OMS3.sim_run(name:"TV") {
+
+
+ model(while: "reader_distances.doProcess" ) {
+   components {
+    
+        // components to be called: reader input data, lwrb and writer output data
+        "reader_distances"            "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"  
+         "reader_variogram"            "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorReader"      
+        "TV"                          "theoreticalVariogram.TheoreticalVariogram"
+        "writer_theoreticalVariogram"         "org.jgrasstools.gears.io.timedependent.OmsTimeSeriesIteratorWriter" 
+            
+         
+   }
+
+  
+   parameter{
+   
+        "reader_distances.file"             "${home}/output/distances_precipitazioni.csv" 
+        "reader_distances.idfield"          "ID"  
+        "reader_distances.tStart"           "${startDate}"
+        "reader_distances.tEnd"             "${endDate}"
+        "reader_distances.tTimestep"          60
+        "reader_distances.fileNovalue"      "-9999"
+
+
+        "reader_variogram.file"             "${home}/output/EV_precipitazioni.csv" 
+        "reader_variogram.idfield"          "ID"  
+        "reader_variogram.tStart"           "${startDate}"
+        "reader_variogram.tEnd"             "${endDate}"
+        "reader_variogram.tTimestep"          60
+        "reader_variogram.fileNovalue"      "-9999"
+        
+        // "bessel"    "pentaspherical" "circular"  "gaussian
+        "TV.modelName"    "linear"
+
+
+        "TV.range"      ps.model.TV_range
+        "TV.nugget"     ps.model.TV_nugget
+        "TV.sill"      ps.model.TV_sill
+        
+  
+        "writer_theoreticalVariogram.file"                 "${home}/output/TV_optimized.csv" 
+        "writer_theoreticalVariogram.tStart"               "${startDate}"
+        "writer_theoreticalVariogram.tTimestep"            60
+        
+   }
+    connect {
+        
+        "reader_distances.outData"             	"TV.inDistanceValues"  
+        "reader_variogram.outData"             	"TV.inExperimentalVariogramValues"         
+        "TV.outHMtheoreticalVariogram"           "writer_theoreticalVariogram.inData"
+
+   }
+ }
+ }
+      
 
     
+
+
+											
 
 
 
